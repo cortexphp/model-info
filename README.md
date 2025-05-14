@@ -40,10 +40,9 @@ $modelInfo = $factory->getModelInfo(ModelProvider::Ollama, 'llama3.1');
 ```
 
 ```php
-
-// Using with custom cache implementation
 use Psr\SimpleCache\CacheInterface;
 
+// Using with custom cache implementation
 $factory = new ModelInfoFactory(
     cache: $yourPsr16CacheImplementation
 );

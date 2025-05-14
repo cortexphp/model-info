@@ -1,0 +1,12 @@
+includes:
+  - vendor/phpstan/phpstan-strict-rules/rules.neon
+
+parameters:
+  level: 10
+  paths:
+    - src
+  excludePaths:
+    analyse:
+      - src/Providers/LiteLLMModelInfoProvider.php
+  tmpDir: .phpstan-cache
+  checkBenevolentUnionTypes: true

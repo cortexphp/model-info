@@ -1,0 +1,71 @@
+{
+    "name": "cortexphp/model-info",
+    "description": "A unified way to get AI model info from various providers",
+    "keywords": [
+        "llm",
+        "ai",
+        "model-info",
+        "cortex"
+    ],
+    "homepage": "https://github.com/cortexphp/model-info",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Sean Tymon",
+            "email": "tymon148@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "psr-discovery/cache-implementations": "^1.2",
+        "psr-discovery/container-implementations": "^1.2",
+        "psr-discovery/http-client-implementations": "^1.4",
+        "psr-discovery/http-factory-implementations": "^1.2"
+    },
+    "require-dev": {
+        "guzzlehttp/guzzle": "^7.9",
+        "pestphp/pest": "^3.0",
+        "pestphp/pest-plugin-type-coverage": "^3.2",
+        "phpstan/phpstan": "^2.0",
+        "phpstan/phpstan-strict-rules": "^2.0",
+        "rector/rector": "^2.0",
+        "symplify/easy-coding-standard": "^12.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Cortex\\ModelInfo\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Cortex\\ModelInfo\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "pest",
+        "ecs": "ecs check --fix",
+        "rector": "rector process",
+        "stan": "phpstan analyse",
+        "type-coverage": "pest --type-coverage --min=100",
+        "format": [
+            "@rector",
+            "@ecs"
+        ],
+        "check": [
+            "@format",
+            "@test",
+            "@stan",
+            "@type-coverage"
+        ]
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

@@ -19,6 +19,7 @@
     ],
     "require": {
         "php": "^8.3",
+        "psr-discovery/discovery": ">1.1.2",
         "psr-discovery/cache-implementations": "^1.2",
         "psr-discovery/container-implementations": "^1.2",
         "psr-discovery/http-client-implementations": "^1.4",

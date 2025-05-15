@@ -10,16 +10,30 @@ use Cortex\ModelInfo\Contracts\ModelInfoProvider;
 use Cortex\ModelInfo\Exceptions\ModelInfoException;
 use Cortex\ModelInfo\Providers\Concerns\ChecksSupport;
 
+/**
+ * @phpstan-import-type ModelInfoData from \Cortex\ModelInfo\Data\ModelInfo
+ */
 class CustomModelInfoProvider implements ModelInfoProvider
 {
     use ChecksSupport;
 
     /**
-     * @param array<array-key, \Cortex\ModelInfo\Data\ModelInfo> $models
+     * @var array<array-key, \Cortex\ModelInfo\Data\ModelInfo>
      */
-    public function __construct(
-        protected array $models,
-    ) {}
+    protected array $models;
+
+    /**
+     * @param array<array-key, \Cortex\ModelInfo\Data\ModelInfo|ModelInfoData> $models
+     */
+    public function __construct(array $models)
+    {
+        $this->models = array_map(
+            fn(ModelInfo|array $model): ModelInfo => $model instanceof ModelInfo
+                ? $model
+                : ModelInfo::createFromArray($model),
+            $models,
+        );
+    }
 
     public function supportedModelProviders(): array
     {

@@ -8,6 +8,9 @@ use Cortex\ModelInfo\Enums\ModelType;
 use Cortex\ModelInfo\Enums\ModelFeature;
 use Cortex\ModelInfo\Enums\ModelProvider;
 
+/**
+ * @phpstan-type ModelInfoData array{name: string, provider: string|ModelProvider, type: string|ModelType, max_input_tokens: int|null, max_output_tokens: int|null, input_cost_per_token?: float, output_cost_per_token?: float, features?: array<array-key, ModelFeature>, is_deprecated?: bool}
+ */
 readonly class ModelInfo
 {
     /**
@@ -31,7 +34,7 @@ readonly class ModelInfo
     }
 
     /**
-     * @param array{name: string, provider: string|ModelProvider, type: string|ModelType, max_input_tokens: int|null, max_output_tokens: int|null, input_cost_per_token: float, output_cost_per_token: float, features?: array<array-key, ModelFeature>, is_deprecated?: bool} $data
+     * @param ModelInfoData $data
      */
     public static function createFromArray(array $data): self
     {
@@ -49,8 +52,8 @@ readonly class ModelInfo
             $type,
             $data['max_input_tokens'] ?? null,
             $data['max_output_tokens'] ?? null,
-            $data['input_cost_per_token'],
-            $data['output_cost_per_token'],
+            $data['input_cost_per_token'] ?? 0.0,
+            $data['output_cost_per_token'] ?? 0.0,
             $data['features'] ?? [],
             $data['is_deprecated'] ?? false,
         );

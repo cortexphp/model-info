@@ -6,11 +6,9 @@
 
 ## Features
 
-- Get model information from various AI providers (Ollama, LiteLLM)
-- PSR-16 Simple Cache support for caching model information
-- Retrieve available models for supported providers
-- Get detailed model information for specific models
-- Extensible provider system
+- 🤖 **Model Providers** - Get detailed model information with type-safe responses from various model providers (OpenAI, Ollama, etc.)
+- 💾 **Simple Cache** - PSR-16 Simple Cache support for caching model information
+- 🔌 **Extensibility** - Easily add support for additional model providers
 
 ## Requirements
 
@@ -33,24 +31,37 @@ $factory = new ModelInfoFactory();
 
 // Get all available models for a provider
 $models = $factory->getModels(ModelProvider::Ollama);
+// ['llama3.1', 'llama3.1:8b', 'llama3.1:70b']
 
 // Get information about a specific model
 $modelInfo = $factory->getModelInfo(ModelProvider::Ollama, 'llama3.1');
 
+// Accessing model information properties
+echo $modelInfo->name;            // 'llama3.1'
+echo $modelInfo->provider;        // ModelProvider::Ollama
+echo $modelInfo->type;            // ModelType::Chat
+echo $modelInfo->maxInputTokens;  // 8000
+echo $modelInfo->maxOutputTokens; // null
+echo $modelInfo->inputCostPerToken;  // 0.0
+echo $modelInfo->outputCostPerToken; // 0.0
+echo $modelInfo->isDeprecated;    // false
+echo $modelInfo->features;        // [ModelFeature::ToolCalling, ModelFeature::JsonOutput, etc]
+
+// Check if model supports specific features
+if ($modelInfo->supportsFeature(ModelFeature::ToolCalling)) {
+    // Use tool calling feature
+}
 ```
 
 ```php
-use Psr\SimpleCache\CacheInterface;
-
-// Using with custom cache implementation
+// Using with custom PSR-16 cache implementation
 $factory = new ModelInfoFactory(
-    cache: $yourPsr16CacheImplementation
+    cache: $yourPsr16CacheImplementation // `Psr\SimpleCache\CacheInterface`
 );
 
-// Force fetch (bypass cache) with exception handling
+// With exception handling
 try {
-    $models = $factory->getModelsOrFail(ModelProvider::LiteLLM);
-    $modelInfo = $factory->getModelInfoOrFail(ModelProvider::LiteLLM, 'gpt-4');
+    $modelInfo = $factory->getModelInfoOrFail(ModelProvider::OpenAI, 'gpt-4o');
 } catch (ModelInfoException $e) {
     // Handle exception
 }

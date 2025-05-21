@@ -11,6 +11,7 @@ use Cortex\ModelInfo\Enums\ModelProvider;
 use Cortex\ModelInfo\Exceptions\ModelInfoException;
 use Cortex\ModelInfo\Providers\OllamaModelInfoProvider;
 use Cortex\ModelInfo\Providers\LiteLLMModelInfoProvider;
+use Cortex\ModelInfo\Providers\LMStudioModelInfoProvider;
 use Cortex\ModelInfo\Providers\Concerns\DiscoversPsrImplementations;
 
 class ModelInfoFactory
@@ -36,7 +37,7 @@ class ModelInfoFactory
     }
 
     /**
-     * @return array<array-key, string>
+     * @return array<array-key, \Cortex\ModelInfo\Data\ModelInfo>
      */
     public function getModels(ModelProvider $modelProvider): array
     {
@@ -59,7 +60,7 @@ class ModelInfoFactory
     /**
      * @throws \Cortex\ModelInfo\Exceptions\ModelInfoException
      *
-     * @return array<array-key, string>
+     * @return array<array-key, \Cortex\ModelInfo\Data\ModelInfo>
      */
     public function getModelsOrFail(ModelProvider $modelProvider): array
     {
@@ -123,6 +124,7 @@ class ModelInfoFactory
     {
         return [
             new OllamaModelInfoProvider(),
+            new LMStudioModelInfoProvider(),
             new LiteLLMModelInfoProvider(),
         ];
     }

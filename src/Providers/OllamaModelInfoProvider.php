@@ -13,6 +13,10 @@ use Cortex\ModelInfo\Contracts\ModelInfoProvider;
 use Cortex\ModelInfo\Providers\Concerns\ChecksSupport;
 use Cortex\ModelInfo\Providers\Concerns\MakesRequests;
 
+/**
+ * @phpstan-type OllamaModelsResponse array{name: string}
+ * @phpstan-type OllamaModelInfoResponse array{name: string, model_info: array<string, mixed>|null, capabilities: array<array-key, string>|null}
+ */
 class OllamaModelInfoProvider implements ModelInfoProvider
 {
     use ChecksSupport;
@@ -35,7 +39,7 @@ class OllamaModelInfoProvider implements ModelInfoProvider
     /**
      * @throws \Cortex\ModelInfo\Exceptions\ModelInfoException
      *
-     * @return array<array-key, string>
+     * @return array<array-key, \Cortex\ModelInfo\Data\ModelInfo>
      */
     public function getModels(ModelProvider $modelProvider): array
     {
@@ -43,23 +47,34 @@ class OllamaModelInfoProvider implements ModelInfoProvider
 
         $body = $this->getModelsResponse();
 
-        return array_map(
-            // @phpstan-ignore return.type,argument.type
-            fn(array $model): string => $model['name'],
+        return array_values(array_map(
+            fn(array $model): ModelInfo => self::mapModelInfo($model),
             $body['models'],
-        );
+        ));
     }
 
+    /**
+     * @throws \Cortex\ModelInfo\Exceptions\ModelInfoException
+     */
     public function getModelInfo(ModelProvider $modelProvider, string $model): ModelInfo
     {
         $this->checkSupportOrFail($modelProvider);
 
-        $body = $this->getModelInfoResponse($model);
-        $modelInfo = $body['model_info'] ?? [];
-        $capabilities = $body['capabilities'] ?? [];
+        return self::mapModelInfo(
+            $this->getModelInfoResponse($model),
+        );
+    }
+
+    /**
+     * @param OllamaModelInfoResponse|OllamaModelsResponse $modelResponseBody
+     */
+    protected static function mapModelInfo(array $modelResponseBody): ModelInfo
+    {
+        $modelInfo = $modelResponseBody['model_info'] ?? [];
+        $capabilities = $modelResponseBody['capabilities'] ?? [];
 
         return new ModelInfo(
-            name: $model,
+            name: $modelResponseBody['name'],
             provider: ModelProvider::Ollama,
             type: self::getModelType($capabilities),
             maxInputTokens: self::getMaxInputTokens($modelInfo),
@@ -104,7 +119,7 @@ class OllamaModelInfoProvider implements ModelInfoProvider
         return match (true) {
             in_array('completion', $capabilities, true) => ModelType::Chat,
             in_array('embedding', $capabilities, true) => ModelType::Embedding,
-            default => ModelType::Other,
+            default => ModelType::Unknown,
         };
     }
 
@@ -135,7 +150,7 @@ class OllamaModelInfoProvider implements ModelInfoProvider
     /**
      * @throws \Cortex\ModelInfo\Exceptions\ModelInfoException
      *
-     * @return array{model_info: array<string, mixed>|null, capabilities: array<array-key, string>|null}
+     * @return OllamaModelInfoResponse
      */
     protected function getModelInfoResponse(string $model): array
     {
@@ -154,7 +169,7 @@ class OllamaModelInfoProvider implements ModelInfoProvider
     /**
      * @throws \Cortex\ModelInfo\Exceptions\ModelInfoException
      *
-     * @return array{models: array{name: string}}
+     * @return array{models: array<array-key, OllamaModelsResponse>}
      */
     protected function getModelsResponse(): array
     {

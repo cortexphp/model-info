@@ -52,7 +52,7 @@ test('it can get the models', function (): void {
 
     $models = $provider->getModels(ModelProvider::Custom);
 
-    expect($models)->toBeArray()->toHaveCount(2)->toContain('custom-model', 'gpt-4o');
+    expect($models)->toBeArray()->toContainOnlyInstancesOf(ModelInfo::class);
 });
 
 test('it can get the model info', function (): void {

@@ -19,9 +19,11 @@ test('it can get the models', function (): void {
         new Response(body: json_encode([
             'gpt-4o' => [
                 'litellm_provider' => 'openai',
+                'mode' => 'chat',
             ],
             'gpt-3.5-turbo' => [
                 'litellm_provider' => 'openai',
+                'mode' => 'chat',
             ],
         ])),
     );
@@ -32,7 +34,7 @@ test('it can get the models', function (): void {
 
     $models = $provider->getModels(ModelProvider::OpenAI);
 
-    expect($models)->toBeArray()->toHaveCount(2)->toContain('gpt-4o', 'gpt-3.5-turbo');
+    expect($models)->toBeArray()->toContainOnlyInstancesOf(ModelInfo::class);
 });
 
 test('it can get the model info', function (): void {

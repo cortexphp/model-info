@@ -13,5 +13,5 @@ enum ModelType: string
     case TextToSpeech = 'text_to_speech';
     case SpeechToText = 'speech_to_text';
     case Moderation = 'moderation';
-    case Other = 'other';
+    case Unknown = 'unknown';
 }

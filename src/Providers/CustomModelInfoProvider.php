@@ -40,17 +40,9 @@ class CustomModelInfoProvider implements ModelInfoProvider
         return ModelProvider::cases();
     }
 
-    /**
-     * @throws \Cortex\ModelInfo\Exceptions\ModelInfoException
-     *
-     * @return array<array-key, string>
-     */
     public function getModels(ModelProvider $modelProvider): array
     {
-        return array_map(
-            fn(ModelInfo $model): string => $model->name,
-            $this->models,
-        );
+        return $this->models;
     }
 
     public function getModelInfo(ModelProvider $modelProvider, string $model): ModelInfo

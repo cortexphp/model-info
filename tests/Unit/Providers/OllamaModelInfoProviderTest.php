@@ -45,12 +45,17 @@ test('it can get the models', function (): void {
 
     $models = $provider->getModels(ModelProvider::Ollama);
 
-    expect($models)->toBeArray()->toHaveCount(1)->toContain('gemma3:12b');
+    expect($models)->toBeArray()
+        ->toHaveCount(1)
+        ->toContainOnlyInstancesOf(ModelInfo::class);
+
+    expect($models[0]->name)->toBe('gemma3:12b');
 });
 
 test('it can get the model info', function (): void {
     $client = $this->mockHttpClient(
         new Response(body: json_encode([
+            'name' => 'mistral-small3.1',
             'model_info' => [
                 'mock.context_length' => 1024 * 8,
             ],

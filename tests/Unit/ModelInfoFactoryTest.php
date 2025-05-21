@@ -39,6 +39,7 @@ test('it can get the available models', function (): void {
             ],
         ])),
         new Response(body: json_encode([
+            'name' => 'gemma3:12b',
             'model_info' => [
                 'mock.context_length' => 1024 * 8,
             ],
@@ -71,11 +72,11 @@ test('it can get the available models', function (): void {
     $ollamaModels = $factory->getModels(ModelProvider::Ollama);
     $customModels = $factory->getModels(ModelProvider::Custom);
 
-    expect($ollamaModels)->toBeArray()->toHaveCount(1);
-    expect($ollamaModels[0])->toEqual('gemma3:12b');
+    expect($ollamaModels)->toBeArray()->toHaveCount(1)->toContainOnlyInstancesOf(ModelInfo::class);
+    expect($ollamaModels[0]->name)->toEqual('gemma3:12b');
 
-    expect($customModels)->toBeArray()->toHaveCount(1);
-    expect($customModels[0])->toEqual('foobar');
+    expect($customModels)->toBeArray()->toHaveCount(1)->toContainOnlyInstancesOf(ModelInfo::class);
+    expect($customModels[0]->name)->toEqual('foobar');
 
     $ollamaModelInfo = $factory->getModelInfo(ModelProvider::Ollama, 'gemma3:12b');
     $customModelInfo = $factory->getModelInfo(ModelProvider::Custom, 'foobar');

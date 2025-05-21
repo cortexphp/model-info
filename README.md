@@ -7,7 +7,7 @@
 ## Features
 
 - 🤖 **Model Providers** - Get detailed model information with type-safe responses from various model providers (OpenAI, Ollama, etc.)
-- 💾 **Simple Cache** - PSR-16 Simple Cache support for caching model information
+- 💾 **Caching** - PSR-16 Simple Cache support for caching model information
 - 🔌 **Extensibility** - Easily add support for additional model providers
 
 ## Requirements

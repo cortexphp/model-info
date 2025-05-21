@@ -48,7 +48,7 @@ class LiteLLMModelInfoProvider implements ModelInfoProvider
     /**
      * @throws \Cortex\ModelInfo\Exceptions\ModelInfoException
      *
-     * @return array<array-key, string>
+     * @return array<array-key, \Cortex\ModelInfo\Data\ModelInfo>
      */
     public function getModels(ModelProvider $modelProvider): array
     {
@@ -61,7 +61,11 @@ class LiteLLMModelInfoProvider implements ModelInfoProvider
             fn(array $model): bool => $model['litellm_provider'] === $modelProvider->value,
         );
 
-        return array_keys($models);
+        return array_values(array_map(
+            fn(array $modelInfo, string $model): ModelInfo => self::mapModelInfo($modelProvider, $model, $modelInfo),
+            $models,
+            array_keys($models),
+        ));
     }
 
     /**
@@ -90,6 +94,14 @@ class LiteLLMModelInfoProvider implements ModelInfoProvider
             throw new ModelInfoException('Model not found');
         }
 
+        return self::mapModelInfo($modelProvider, $model, $modelInfo);
+    }
+
+    protected static function mapModelInfo(
+        ModelProvider $modelProvider,
+        string $model,
+        array $modelInfo,
+    ): ModelInfo {
         return new ModelInfo(
             name: $model,
             provider: $modelProvider,
@@ -162,7 +174,7 @@ class LiteLLMModelInfoProvider implements ModelInfoProvider
             'audio_speech' => ModelType::TextToSpeech,
             'audio_transcription' => ModelType::SpeechToText,
             'moderation' => ModelType::Moderation,
-            default => ModelType::Other,
+            default => ModelType::Unknown,
         };
     }
 

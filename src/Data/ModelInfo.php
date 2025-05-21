@@ -9,12 +9,13 @@ use Cortex\ModelInfo\Enums\ModelFeature;
 use Cortex\ModelInfo\Enums\ModelProvider;
 
 /**
- * @phpstan-type ModelInfoData array{name: string, provider: string|ModelProvider, type: string|ModelType, max_input_tokens: int|null, max_output_tokens: int|null, input_cost_per_token?: float, output_cost_per_token?: float, features?: array<array-key, ModelFeature>, is_deprecated?: bool}
+ * @phpstan-type ModelInfoData array{name: string, provider: string|ModelProvider, type: string|ModelType, max_input_tokens: int|null, max_output_tokens: int|null, input_cost_per_token?: float, output_cost_per_token?: float, features?: array<array-key, ModelFeature>, is_deprecated?: bool, metadata?: array<string, mixed>}
  */
 readonly class ModelInfo
 {
     /**
      * @param array<\Cortex\ModelInfo\Enums\ModelFeature> $features
+     * @param array<string, mixed> $metadata
      */
     public function __construct(
         public string $name,
@@ -22,15 +23,21 @@ readonly class ModelInfo
         public ModelType $type,
         public ?int $maxInputTokens,
         public ?int $maxOutputTokens,
-        public float $inputCostPerToken,
-        public float $outputCostPerToken,
+        public ?float $inputCostPerToken,
+        public ?float $outputCostPerToken,
         public array $features,
         public bool $isDeprecated = false,
+        public array $metadata = [],
     ) {}
 
     public function supportsFeature(ModelFeature $modelFeature): bool
     {
         return in_array($modelFeature, $this->features, true);
+    }
+
+    public function getMetadata(string $key): mixed
+    {
+        return $this->metadata[$key] ?? null;
     }
 
     /**
@@ -52,10 +59,11 @@ readonly class ModelInfo
             $type,
             $data['max_input_tokens'] ?? null,
             $data['max_output_tokens'] ?? null,
-            $data['input_cost_per_token'] ?? 0.0,
-            $data['output_cost_per_token'] ?? 0.0,
+            $data['input_cost_per_token'] ?? null,
+            $data['output_cost_per_token'] ?? null,
             $data['features'] ?? [],
             $data['is_deprecated'] ?? false,
+            $data['metadata'] ?? [],
         );
     }
 }

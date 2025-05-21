@@ -51,10 +51,12 @@ test('it can get the models', function (): void {
 
     $models = $provider->getModels(ModelProvider::LMStudio);
 
-    expect($models)->toBeArray()->toBe([
-        'text-embedding-nomic-embed-text-v1.5',
-        'qwen2.5-14b-instruct-mlx',
-    ]);
+    expect($models)->toBeArray()
+        ->toHaveCount(2)
+        ->toContainOnlyInstancesOf(ModelInfo::class);
+
+    expect($models[0]->name)->toBe('text-embedding-nomic-embed-text-v1.5');
+    expect($models[1]->name)->toBe('qwen2.5-14b-instruct-mlx');
 });
 
 test('it can get the model info', function (): void {

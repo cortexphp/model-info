@@ -14,7 +14,7 @@ use Cortex\ModelInfo\Providers\Concerns\ChecksSupport;
 use Cortex\ModelInfo\Providers\Concerns\MakesRequests;
 
 /**
- * @phpstan-type ModelInfoResponse array{id: string, object: string, type: string, max_context_length: int, type: ?string}
+ * @phpstan-type LMStudioModelInfoResponse array{id: string, object: string, type: string, max_context_length: int, type: ?string}
  */
 class LMStudioModelInfoProvider implements ModelInfoProvider
 {
@@ -38,7 +38,7 @@ class LMStudioModelInfoProvider implements ModelInfoProvider
     /**
      * @throws \Cortex\ModelInfo\Exceptions\ModelInfoException
      *
-     * @return array<array-key, string>
+     * @return array<array-key, \Cortex\ModelInfo\Data\ModelInfo>
      */
     public function getModels(ModelProvider $modelProvider): array
     {
@@ -46,26 +46,30 @@ class LMStudioModelInfoProvider implements ModelInfoProvider
 
         $body = $this->getModelsResponse();
 
-        $models = array_map(
-            // @phpstan-ignore return.type,argument.type
-            fn(array $model): string => $model['id'],
+        return array_values(array_map(
+            fn(array $model): ModelInfo => self::mapModelInfo($model),
             $body['data'],
-        );
-
-        return array_values($models);
+        ));
     }
 
     public function getModelInfo(ModelProvider $modelProvider, string $model): ModelInfo
     {
         $this->checkSupportOrFail($modelProvider);
 
-        $body = $this->getModelInfoResponse($model);
-        $type = $body['type'] ?? '';
+        return self::mapModelInfo(
+            $this->getModelInfoResponse($model),
+        );
+    }
 
+    /**
+     * @param LMStudioModelInfoResponse $body
+     */
+    protected static function mapModelInfo(array $body): ModelInfo
+    {
         return new ModelInfo(
-            name: $model,
+            name: $body['id'],
             provider: ModelProvider::LMStudio,
-            type: self::getModelType($type),
+            type: self::getModelType($body['type'] ?? ''),
             maxInputTokens: self::getMaxInputTokens($body['max_context_length']),
             maxOutputTokens: null,
             inputCostPerToken: 0.0,
@@ -75,7 +79,7 @@ class LMStudioModelInfoProvider implements ModelInfoProvider
     }
 
     /**
-     * @param ModelInfoResponse $body
+     * @param LMStudioModelInfoResponse $body
      *
      * @return array<array-key, \Cortex\ModelInfo\Enums\ModelFeature>
      */
@@ -96,7 +100,7 @@ class LMStudioModelInfoProvider implements ModelInfoProvider
         return match ($type) {
             'llm' => ModelType::Chat,
             'embeddings' => ModelType::Embedding,
-            default => ModelType::Other,
+            default => ModelType::Unknown,
         };
     }
 
@@ -108,7 +112,7 @@ class LMStudioModelInfoProvider implements ModelInfoProvider
     /**
      * @throws \Cortex\ModelInfo\Exceptions\ModelInfoException
      *
-     * @return ModelInfoResponse
+     * @return LMStudioModelInfoResponse
      */
     protected function getModelInfoResponse(string $model): array
     {
@@ -127,7 +131,7 @@ class LMStudioModelInfoProvider implements ModelInfoProvider
     /**
      * @throws \Cortex\ModelInfo\Exceptions\ModelInfoException
      *
-     * @return array{data: array{id: string}}
+     * @return array{data: array<array-key, LMStudioModelInfoResponse>}
      */
     protected function getModelsResponse(): array
     {

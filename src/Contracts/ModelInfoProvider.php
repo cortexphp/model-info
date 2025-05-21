@@ -12,7 +12,7 @@ interface ModelInfoProvider
     /**
      * Get the available models for a given provider.
      *
-     * @return array<array-key, string>
+     * @return array<array-key, \Cortex\ModelInfo\Data\ModelInfo>
      */
     public function getModels(ModelProvider $modelProvider): array;
 

@@ -6,6 +6,7 @@ namespace Cortex\ModelInfo\Enums;
 
 use Cortex\ModelInfo\Data\ModelInfo;
 use Cortex\ModelInfo\ModelInfoFactory;
+use Psr\Container\ContainerExceptionInterface;
 use Cortex\ModelInfo\Providers\Concerns\DiscoversPsrImplementations;
 
 enum ModelProvider: string
@@ -29,7 +30,7 @@ enum ModelProvider: string
     /**
      * @param array<array-key, \Cortex\ModelInfo\Contracts\ModelInfoProvider>|null $modelInfoProviders
      *
-     * @return array<array-key, string>
+     * @return array<array-key, \Cortex\ModelInfo\Data\ModelInfo>
      */
     public function models(?array $modelInfoProviders = null): array
     {
@@ -81,11 +82,13 @@ enum ModelProvider: string
     {
         $container = self::discoverContainer();
 
-        if ($container?->has(ModelInfoFactory::class) === true) {
-            // @phpstan-ignore return.type
-            return $container->get(ModelInfoFactory::class);
+        try {
+            /** @var \Cortex\ModelInfo\ModelInfoFactory $factory */
+            $factory = $container?->get(ModelInfoFactory::class);
+        } catch (ContainerExceptionInterface) {
+            //
         }
 
-        return new ModelInfoFactory($modelInfoProviders);
+        return $factory ?? new ModelInfoFactory($modelInfoProviders);
     }
 }

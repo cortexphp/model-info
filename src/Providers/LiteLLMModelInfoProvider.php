@@ -24,8 +24,6 @@ class LiteLLMModelInfoProvider implements ModelInfoProvider
 
     protected const string LITELLM_STATIC_URL = 'https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json';
 
-    protected ClientInterface $httpClient;
-
     public function __construct(
         protected ?string $host = null,
         #[SensitiveParameter]

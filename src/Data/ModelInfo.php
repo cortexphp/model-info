@@ -14,6 +14,8 @@ use Cortex\ModelInfo\Enums\ModelProvider;
 readonly class ModelInfo
 {
     /**
+     * @param ?float $inputCostPerToken The input cost per token in USD
+     * @param ?float $outputCostPerToken The output cost per token in USD
      * @param array<\Cortex\ModelInfo\Enums\ModelFeature> $features
      * @param array<string, mixed> $metadata
      */

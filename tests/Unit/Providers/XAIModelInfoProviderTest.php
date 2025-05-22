@@ -59,7 +59,7 @@ test('it can get the models', function (): void {
     expect($modelInfo->name)->toBe('grok-3-beta');
     expect($modelInfo->provider)->toBe(ModelProvider::XAI);
     expect($modelInfo->type)->toBe(ModelType::Chat);
-    expect($modelInfo->maxInputTokens)->toBe(131072);
+    expect($modelInfo->maxInputTokens)->toBe(128000);
     expect($modelInfo->maxOutputTokens)->toBeNull();
     expect($modelInfo->inputCostPerToken)->toBe(0.0002);
     expect($modelInfo->outputCostPerToken)->toBe(0.001);
@@ -104,7 +104,7 @@ test('it can get the model info', function (): void {
     expect($modelInfo->name)->toBe('grok-2-vision-1212');
     expect($modelInfo->provider)->toBe(ModelProvider::XAI);
     expect($modelInfo->type)->toBe(ModelType::Chat);
-    expect($modelInfo->maxInputTokens)->toBe(32768);
+    expect($modelInfo->maxInputTokens)->toBe(32000);
     expect($modelInfo->maxOutputTokens)->toBeNull();
     expect($modelInfo->inputCostPerToken)->toBe(0.0002);
     expect($modelInfo->outputCostPerToken)->toBe(0.001);

@@ -128,9 +128,11 @@ class XAIModelInfoProvider implements ModelInfoProvider
      */
     protected static function getMaxInputTokens(array $body): ?int
     {
-        return str_starts_with($body['id'], 'grok-2-vision')
+        $tokens = str_starts_with($body['id'], 'grok-2-vision')
             ? 32768
             : 131072;
+
+        return (int) ($tokens * 0.9765625);
     }
 
     /**

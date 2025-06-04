@@ -62,19 +62,20 @@ class OllamaModelInfoProvider implements ModelInfoProvider
 
         return self::mapModelInfo(
             $this->getModelInfoResponse($model),
+            $model,
         );
     }
 
     /**
      * @param OllamaModelInfoResponse|OllamaModelsResponse $modelResponseBody
      */
-    protected static function mapModelInfo(array $modelResponseBody): ModelInfo
+    protected static function mapModelInfo(array $modelResponseBody, ?string $modelName = null): ModelInfo
     {
         $modelInfo = $modelResponseBody['model_info'] ?? [];
         $capabilities = $modelResponseBody['capabilities'] ?? [];
 
         return new ModelInfo(
-            name: $modelResponseBody['name'],
+            name: $modelName ?? $modelResponseBody['name'],
             provider: ModelProvider::Ollama,
             type: self::getModelType($capabilities),
             maxInputTokens: self::getMaxInputTokens($modelInfo),

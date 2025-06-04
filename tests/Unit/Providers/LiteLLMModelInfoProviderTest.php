@@ -26,15 +26,34 @@ test('it can get the models', function (): void {
                 'mode' => 'chat',
             ],
         ])),
+        new Response(body: json_encode([
+            'xai/grok-2-latest' => [
+                'litellm_provider' => 'xai',
+                'mode' => 'chat',
+            ],
+        ])),
     );
 
     $provider = new LiteLLMModelInfoProvider(
         httpClient: $client,
     );
 
-    $models = $provider->getModels(ModelProvider::OpenAI);
+    $openAIModels = $provider->getModels(ModelProvider::OpenAI);
+    $xAIModels = $provider->getModels(ModelProvider::XAI);
 
-    expect($models)->toBeArray()->toContainOnlyInstancesOf(ModelInfo::class);
+    expect($openAIModels)->toBeArray()
+        ->toHaveCount(2)
+        ->toContainOnlyInstancesOf(ModelInfo::class);
+
+    expect($openAIModels[0]->name)->toBe('gpt-4o');
+    expect($openAIModels[1]->name)->toBe('gpt-3.5-turbo');
+
+    expect($xAIModels)->toBeArray()
+        ->toHaveCount(1)
+        ->toContainOnlyInstancesOf(ModelInfo::class);
+
+    // prefix is removed from model name
+    expect($xAIModels[0]->name)->toBe('grok-2-latest');
 });
 
 test('it can get the model info', function (): void {

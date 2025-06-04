@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Cortex\ModelInfo\Providers;
 
-use JsonException;
 use SensitiveParameter;
 use Psr\SimpleCache\CacheInterface;
 use Cortex\ModelInfo\Data\ModelInfo;
@@ -17,6 +16,10 @@ use Cortex\ModelInfo\Exceptions\ModelInfoException;
 use Cortex\ModelInfo\Providers\Concerns\ChecksSupport;
 use Cortex\ModelInfo\Providers\Concerns\MakesRequests;
 
+/**
+ * @phpstan-type LiteLLMModelInfoResponse array{litellm_provider: string, mode: string, max_input_tokens: ?int, max_output_tokens: ?int, input_cost_per_token: ?float, output_cost_per_token: ?float, supports_response_schema: ?bool, supports_function_calling: ?bool, supports_vision: ?bool, supports_tool_choice: ?bool, supports_reasoning: ?bool, supports_web_search: ?bool, supports_prompt_caching: ?bool, supports_audio_input: ?bool, supports_audio_output: ?bool, deprecation_date?: ?string}
+ * @phpstan-type LiteLLMModelInfoResponseWithName array{name: string, litellm_provider: string, mode: string, max_input_tokens: ?int, max_output_tokens: ?int, input_cost_per_token: ?float, output_cost_per_token: ?float, supports_response_schema: ?bool, supports_function_calling: ?bool, supports_vision: ?bool, supports_tool_choice: ?bool, supports_reasoning: ?bool, supports_web_search: ?bool, supports_prompt_caching: ?bool, supports_audio_input: ?bool, supports_audio_output: ?bool, deprecation_date?: ?string}
+ */
 class LiteLLMModelInfoProvider implements ModelInfoProvider
 {
     use ChecksSupport;
@@ -52,18 +55,17 @@ class LiteLLMModelInfoProvider implements ModelInfoProvider
     {
         $this->checkSupportOrFail($modelProvider);
 
-        $body = $this->getStaticResponse();
+        $body = $this->getResponse();
 
-        $models = array_filter(
+        $models = self::removePrefixFromModelName(array_filter(
             $body,
             fn(array $model): bool => $model['litellm_provider'] === $modelProvider->value,
-        );
-
-        return array_values(array_map(
-            fn(array $modelInfo, string $model): ModelInfo => self::mapModelInfo($modelProvider, $model, $modelInfo),
-            $models,
-            array_keys($models),
         ));
+
+        return array_map(
+            fn(array $modelInfo): ModelInfo => self::mapModelInfo($modelProvider, $modelInfo),
+            $models,
+        );
     }
 
     /**
@@ -73,50 +75,59 @@ class LiteLLMModelInfoProvider implements ModelInfoProvider
     {
         $this->checkSupportOrFail($modelProvider);
 
-        $body = $this->getStaticResponse();
+        $body = $this->getResponse();
 
-        $models = array_filter(
+        $models = self::removePrefixFromModelName(array_filter(
             $body,
             fn(array $model): bool => $model['litellm_provider'] === $modelProvider->value,
-        );
+        ));
 
         $modelInfo = array_values(
-            array_filter(
-                $models,
-                fn(string $key): bool => $key === $model,
-                ARRAY_FILTER_USE_KEY,
-            ),
+            array_filter($models, fn(array $modelInfo): bool => $modelInfo['name'] === $model),
         )[0] ?? null;
 
         if ($modelInfo === null) {
             throw new ModelInfoException('Model not found');
         }
 
-        return self::mapModelInfo($modelProvider, $model, $modelInfo);
+        return self::mapModelInfo($modelProvider, $modelInfo);
     }
 
-    protected static function mapModelInfo(
-        ModelProvider $modelProvider,
-        string $model,
-        array $modelInfo,
-    ): ModelInfo {
+    /**
+     * @param array<array-key, LiteLLMModelInfoResponse> $models
+     *
+     * @return array<array-key, LiteLLMModelInfoResponseWithName>
+     */
+    protected static function removePrefixFromModelName(array $models): array
+    {
+        return array_map(fn(array $modelInfo, string $modelName): array => [
+            'name' => str_replace($modelInfo['litellm_provider'] . '/', '', $modelName),
+            ...$modelInfo,
+        ], $models, array_keys($models));
+    }
+
+    /**
+     * @param LiteLLMModelInfoResponseWithName $modelInfo
+     */
+    protected static function mapModelInfo(ModelProvider $modelProvider, array $modelInfo): ModelInfo
+    {
         return new ModelInfo(
-            name: $model,
+            name: $modelInfo['name'],
             provider: $modelProvider,
-            type: self::mapModelType($modelInfo['mode'] ?? ''),
+            type: self::mapModelType($modelInfo['mode']),
             maxInputTokens: $modelInfo['max_input_tokens'] ?? null,
             maxOutputTokens: $modelInfo['max_output_tokens'] ?? null,
             inputCostPerToken: $modelInfo['input_cost_per_token'] ?? 0.0,
             outputCostPerToken: $modelInfo['output_cost_per_token'] ?? 0.0,
             features: self::getFeatures($modelInfo),
-            isDeprecated: isset($modelInfo['deprecation_date']) && $modelInfo['deprecation_date'] !== null,
+            isDeprecated: isset($modelInfo['deprecation_date']),
         );
     }
 
     /**
-     * @param array<string, mixed> $info
+     * @param LiteLLMModelInfoResponse $info
      *
-     * @return array<int, \Cortex\Enums\ModelFeature>
+     * @return array<array-key, \Cortex\ModelInfo\Enums\ModelFeature>
      */
     protected static function getFeatures(array $info): array
     {
@@ -177,39 +188,48 @@ class LiteLLMModelInfoProvider implements ModelInfoProvider
     }
 
     /**
-     * @throws \Cortex\Exceptions\ModelInfoException
+     * @throws \Cortex\ModelInfo\Exceptions\ModelInfoException
      *
-     * @return array<string, mixed>
+     * @return array<array-key, LiteLLMModelInfoResponse>
      */
     protected function getStaticResponse(): array
     {
-        $request = self::discoverHttpRequestFactory()->createRequest('GET', self::LITELLM_STATIC_URL);
-        $response = $this->httpClient->sendRequest($request);
+        $request = self::discoverHttpRequestFactoryOrFail()
+            ->createRequest('GET', self::LITELLM_STATIC_URL);
 
-        if ($response->getStatusCode() !== 200) {
-            throw new ModelInfoException('Failed to get model info');
-        }
-
-        try {
-            return json_decode($response->getBody()->getContents(), true, flags: JSON_THROW_ON_ERROR);
-        } catch (JsonException $jsonException) {
-            throw new ModelInfoException('Failed to decode model info', previous: $jsonException);
-        }
+        // @phpstan-ignore return.type
+        return $this->getJsonResponse($request);
     }
 
     /**
      * @throws \Cortex\ModelInfo\Exceptions\ModelInfoException
      *
-     * @return array<string, mixed>
+     * @return array<array-key, LiteLLMModelInfoResponse>
      */
     protected function getApiModelsResponse(): array
     {
-        $request = self::discoverHttpRequestFactory()
+        $request = self::discoverHttpRequestFactoryOrFail()
             ->createRequest('GET', $this->host . '/v1/models');
 
+        // @phpstan-ignore return.type
         return $this->getJsonResponse($request);
     }
 
+    /**
+     * @throws \Cortex\ModelInfo\Exceptions\ModelInfoException
+     *
+     * @return array<array-key, LiteLLMModelInfoResponse>
+     */
+    protected function getResponse(): array
+    {
+        return $this->shouldUseStaticResponse()
+            ? $this->getStaticResponse()
+            : $this->getApiModelsResponse();
+    }
+
+    /**
+     * Determine if the static response should be used.
+     */
     protected function shouldUseStaticResponse(): bool
     {
         return $this->host === null || $this->apiKey === null;

@@ -57,7 +57,7 @@ test('it can get the model info', function (): void {
         new Response(body: json_encode([
             'name' => 'mistral-small3.1',
             'model_info' => [
-                'mock.context_length' => 1024 * 8,
+                'mock.context_length' => 1024 * 128,
             ],
             'capabilities' => [
                 'completion',
@@ -76,7 +76,7 @@ test('it can get the model info', function (): void {
     expect($modelInfo->name)->toBe('mistral-small3.1');
     expect($modelInfo->provider)->toBe(ModelProvider::Ollama);
     expect($modelInfo->type)->toBe(ModelType::Chat);
-    expect($modelInfo->maxInputTokens)->toBe(8000);
+    expect($modelInfo->maxInputTokens)->toBe(128000);
     expect($modelInfo->maxOutputTokens)->toBeNull();
     expect($modelInfo->inputCostPerToken)->toBe(0.0);
     expect($modelInfo->outputCostPerToken)->toBe(0.0);
